@@ -7,4 +7,4 @@ elif location == 'jesse':
 elif location == 'sebas':
     pass
 elif location == 'jan':
-    training_data = 'Data/Input/food-recognition-challenge/train_set/train_set/train_set'
+    training_data = 'Data/Input/food-recognition-challenge-2022/train_set/train_set/train_set'
