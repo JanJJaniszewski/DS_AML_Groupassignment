@@ -2,6 +2,11 @@
 __pycache__/
 *.py[cod]
 *$py.class
+Config/Location.py
+Location.py
+Config/Secrets.py
+Secrets.py
+Data/
 
 # C extensions
 *.so
