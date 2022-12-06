@@ -37,10 +37,10 @@ def A_Folderize():
     print('Putting pictures in the newly created folders')
     for picpath in os.listdir(paths.input_train):
         labelfolder = labels_train.loc[labels_train['img_name'] == picpath]['label'].iloc[0]
-        ut.copy_file(paths.input_train + picpath, paths.A_trainset + str(labelfolder))
+        ut.copy_file(paths.input_train + picpath, paths.A_trainset + str(labelfolder) + '/' + picpath)
     for picpath in os.listdir(paths.input_test):
         labelfolder = labels_test.loc[labels_test['img_name'] == picpath]['label'].iloc[0]
-        ut.copy_file(paths.input_test + picpath, paths.A_testset + str(labelfolder))
+        ut.copy_file(paths.input_test + picpath, paths.A_testset + str(labelfolder) + '/' + picpath)
 
     print('DONE: A_folderize')
 

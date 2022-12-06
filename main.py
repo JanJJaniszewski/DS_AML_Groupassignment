@@ -14,5 +14,5 @@ def main(*pipeparts):
 
 if __name__ == '__main__':
     # Define which parts of the pipeline to execute (include 'A' in first execution, then 'A' does not need to be run)
-    pipeparts = ['A', 'B', 'C']
+    pipeparts = ['B', 'C']
     main(*pipeparts)
