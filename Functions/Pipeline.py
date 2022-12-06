@@ -97,9 +97,11 @@ def B_PrepareData(resize=conf.resize, means=conf.means, stds=conf.stds):
 
 
 def C_TrainModel(train_loader, test_loader):
+    print('START: Training model')
     model = ut.define_model(model=conf.model_main)
     model = ut.train_nn(model, train_loader, test_loader, criterion=conf.loss_fn, optimizer=conf.optimizer,
                         n_epochs=conf.n_epochs)
+    print('DONE: Training model')
     return model
 
 
