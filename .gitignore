@@ -8,6 +8,7 @@ Config/Secrets.py
 Secrets.py
 Data/
 
+
 # C extensions
 *.so
 
@@ -36,6 +37,8 @@ MANIFEST
 #  before PyInstaller builds the exe, so as to inject date/other infos into it.
 *.manifest
 *.spec
+*.jpeg
+*.jpg
 
 # Installer logs
 pip-log.txt
