@@ -1,6 +1,7 @@
 from __future__ import print_function, division
 
 import os
+import shutil
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -109,5 +110,5 @@ def make_folders():
         if not os.path.exists(path):
             os.mkdir(path)
 
-
-copy_file = lambda src_file, dest: os.system(f"cp {src_file} {dest}")
+def copy_file(source, destination):
+    shutil.copyfile(source, destination)
