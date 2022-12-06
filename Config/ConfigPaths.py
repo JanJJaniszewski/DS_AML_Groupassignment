@@ -5,7 +5,7 @@ if location == 'cinthy':
 elif location == 'jesse':
     pass
 elif location == 'sebas':
-    input_path = './Data/Input/food-recognition-challenge-2022/'
+    input_path = './Data/Input/'
     input_train = input_path + 'train_set/train_set/train_set/'
     input_test = input_path + 'test_set/test_set/test_set/'
     input_labels_test = input_path + 'sample.csv'
@@ -15,7 +15,7 @@ elif location == 'sebas':
     A_trainset = throughput_path + 'A_folderize/train/'
     A_testset = throughput_path + 'A_folderize/test/'
 elif location == 'jan':
-    input_path = './Data/Input/food-recognition-challenge-2022/'
+    input_path = './Data/Input/'
     input_train = input_path + 'train_set/train_set/train_set/'
     input_test = input_path + 'test_set/test_set/test_set/'
     input_labels_test = input_path + 'sample.csv'

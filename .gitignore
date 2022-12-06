@@ -7,6 +7,8 @@ Location.py
 Config/Secrets.py
 Secrets.py
 Data/
+sample.csv
+class_list_food.txt
 
 
 # C extensions
