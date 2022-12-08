@@ -35,8 +35,8 @@ def A_Folderize():
             os.mkdir(path)
 
     print('Putting pictures in the newly created folders')
-    for picpath in os.listdir(paths.input_train):
-        labelfolder = labels_train.loc[labels_train['img_name'] == picpath]['label'].iloc[0]
+    for picpath in os.listdir(paths.input_train): #picpath is the pathway to one image and the image its img_name, 
+        labelfolder = labels_train.loc[labels_train['img_name'] == picpath]['label'].iloc[0] #this returns a number indicating a foodclass 
         ut.copy_file(paths.input_train + picpath, paths.A_trainset + str(labelfolder) + '/' + picpath)
     for picpath in os.listdir(paths.input_test):
         labelfolder = labels_test.loc[labels_test['img_name'] == picpath]['label'].iloc[0]
