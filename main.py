@@ -1,18 +1,24 @@
 from __future__ import print_function, division
 
 import Functions.Pipeline as pipe
+import torch
+import torchvision
 
+print("PyTorch Version: ",torch.__version__)
+print("Torchvision Version: ",torchvision.__version__)
 
 def main(*pipeparts):
     if 'A' in pipeparts:
-        pipe.A_Folderize()
+        pipe.A_Folderize(force=False)
     if 'B' in pipeparts:
-        train_loader, test_loader = pipe.B_PrepareData()
+        model, input_size = pipe.B_InitModel()
     if 'C' in pipeparts:
-        model = pipe.C_TrainModel(train_loader, test_loader)
+        train_loader, val_loader, test_loader = pipe.C_PrepareData(input_size)
+    if 'D' in pipeparts:
+        model = pipe.D_TrainModel(model, train_loader, val_loader)
 
 
 if __name__ == '__main__':
     # Define which parts of the pipeline to execute (include 'A' in first execution, then 'A' does not need to be run)
-    pipeparts = ['A', 'B', 'C']
+    pipeparts = ['B', 'C', 'D']
     main(*pipeparts)

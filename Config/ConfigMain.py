@@ -1,21 +1,31 @@
 import torch.nn as nn
 from torch import optim
 from torchvision import models
-from torchvision.models import ResNet50_Weights, ResNet18_Weights
+from torchvision.models import ResNet18_Weights
 import torch
 from Config.Location import location
 
-# Generali Config
-# Model
-model_main = models.resnet18(weights=ResNet18_Weights.DEFAULT)
-loss_fn = nn.CrossEntropyLoss()
-n_epochs = 100
-optimizer = optim.SGD(model_main.parameters(), lr=0.01, momentum=0.9, weight_decay=0.003)
-resize = 224
+# Set model name and extract feature flag
+# Available model names: [resnet18, resnet50, alexnet, vgg, squeezenet, densenet, inception]
+model_name = "resnet50"
+
+# Flag for feature extracting. When False, we finetune the whole model,
+# when True we only update the reshaped layer params
+feature_extract = True
+
+# Set number of training epochs and batch size
+num_epochs = 2
+batch_size = 8
+
+# Set mean and std values for normalization
 means = [0.6366, 0.5437, 0.4454]
 stds = [0.2235, 0.2422, 0.2654]
 
-# Local config
+# Set learning rate and momentum
+learning_rate = 0.001
+momentum = 0.9
+
+# Set location-specific configuration
 if location == 'cinthy':
     pass
 elif location == 'jesse':
