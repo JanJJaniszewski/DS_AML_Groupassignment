@@ -17,7 +17,7 @@ def main(*pipeparts):
     if 'D' in pipeparts:
         model = pipe.D_TrainModel(model, train_loader, val_loader)
     if 'E' in pipeparts:
-        print(pipe.E_PredictModel(model, test_loader))
+        predictions = pipe.E_PredictModel(model, test_loader)
 
 
 if __name__ == '__main__':

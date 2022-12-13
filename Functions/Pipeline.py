@@ -39,21 +39,21 @@ def A_Folderize(force = False):
     pathh = os.path.join(paths.A_trainset, '0')
     if (not os.path.exists(pathh)) | force:
         for label in labels_train['label'].unique():
-            path = os.path.join(paths.A_trainset, str(label - 1))
+            path = os.path.join(paths.A_trainset, str(label))
             os.mkdir(path)
         for label in labels_test['label'].unique():
-            path = os.path.join(paths.A_testset, str(label - 1))
+            path = os.path.join(paths.A_testset, str(label))
             os.mkdir(path)
 
         print('Putting pictures in the newly created folders')
         for picpath in os.listdir(paths.input_train): #picpath is the pathway to one image and the image its img_name,
             labelfolder = labels_train.loc[labels_train['img_name'] == picpath]['label'].iloc[0] #this returns a number indicating a foodclass
             ut.copy_file(os.path.join(paths.input_train, picpath),
-                         os.path.join(paths.A_trainset, str(labelfolder - 1), picpath))
+                         os.path.join(paths.A_trainset, str(labelfolder), picpath))
         for picpath in os.listdir(paths.input_test):
             labelfolder = labels_test.loc[labels_test['img_name'] == picpath]['label'].iloc[0]
             ut.copy_file(os.path.join(paths.input_test, picpath),
-                         os.path.join(paths.A_testset, str(labelfolder - 1), picpath))
+                         os.path.join(paths.A_testset, str(labelfolder), picpath))
 
     print('DONE: A_folderize')
 
