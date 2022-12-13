@@ -19,6 +19,8 @@ def main(*pipeparts):
     if 'E' in pipeparts:
         predictions = pipe.E_PredictModel(model, test_loader)
 
+    return predictions
+
 
 if __name__ == '__main__':
     # Define which parts of the pipeline to execute (include 'A' in first execution, then 'A' does not need to be run)
