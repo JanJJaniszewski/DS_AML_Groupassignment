@@ -19,8 +19,7 @@ from torchvision.models import ResNet18_Weights, ResNet50_Weights
 import Config.ConfigMain as conf
 import Config.ConfigPaths as paths
 
-
-from multiprocessing import freeze_support
+from multiprocessing import freeze_support 
 
 import torch
 import torch.nn as nn
@@ -34,6 +33,7 @@ import os
 import copy
 import Config.ConfigPaths as paths
 import Config.ConfigMain as conf
+from torch.utils.data import DataLoader
 
 
 def get_mean_and_std(loader):
@@ -132,8 +132,30 @@ def train_nn(model, optimizer, train_loader, test_loader, criterion,
         print(f"Epoch {epoch + 1}: Correct: {running_correct} ({epoch_acc}%); Loss: {epoch_loss}")
 
 
-def predict(model, test_loader):
-    pass
+def predict(model, test_loader): 
+    predictions = []
+    model.eval() #set to evaluate, which might impact how the calculations are done
+    with torch.no_grad(): #no gradient needs to be computed for evaluation
+        for x, y in test_loader:
+            x = x.reshape(x.shape[0], -1)
+
+            score = model(x)
+            predictions.append(score)
+
+    """ 
+  predictions = []
+  for item in test_loader:
+    print (item)
+
+    with torch.no_grad():
+        # Iterate over data.
+        for inputs, _ in test_loader:
+            outputs = model(inputs)
+            _, preds = torch.max(outputs, 1)
+        predictions.extend(preds.numpy())
+    """
+    return predictions
+
 
 
 def evaluate_model_on_test_set(model, test_loader):

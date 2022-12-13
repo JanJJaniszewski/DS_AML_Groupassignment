@@ -146,5 +146,33 @@ def D_EvaluateModel():
     pass
 
 
-def E_PredictModel():
-    pass
+def E_PredictModel(model, test_loader):
+    print("Predictions")
+    model.eval()
+    #with torch.no_grad():
+    imagenames = []
+
+    for data in test_loader.dataset.imgs:
+        imgname = data[0].split("/")[-1]
+        imgname = imgname[2:]
+        imagenames.append(imgname)
+        break
+    
+    
+
+    predictions = []
+    for item_image, _ in test_loader.dataset:
+        current_image = torch.unsqueeze(item_image, 0)
+        perhaps_image_name, prediction_class = torch.max(model(current_image), 1)
+        this_prediction = prediction_class[0]
+        print(perhaps_image_name, int(this_prediction))
+        predictions.append(int(this_prediction))
+        break
+    print(predictions)
+
+    df = pd.DataFrame({
+        "img_name" : imagenames,
+        "label" : predictions
+    })
+    print(df)
+    df.to_csv("test_van_resnet.csv", index=False)
