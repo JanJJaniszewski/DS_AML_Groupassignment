@@ -10,7 +10,7 @@ feature_extract = True
 
 # Set number of training epochs and batch size
 num_epochs = 2
-batch_size = 8
+batch_size = 32
 
 # Set mean and std values for normalization
 means = [0.6366, 0.5437, 0.4454]
