@@ -133,28 +133,7 @@ def train_nn(model, optimizer, train_loader, test_loader, criterion,
 
 
 def predict(model, test_loader): 
-    predictions = []
-    model.eval() #set to evaluate, which might impact how the calculations are done
-    with torch.no_grad(): #no gradient needs to be computed for evaluation
-        for x, y in test_loader:
-            x = x.reshape(x.shape[0], -1)
-
-            score = model(x)
-            predictions.append(score)
-
-    """ 
-  predictions = []
-  for item in test_loader:
-    print (item)
-
-    with torch.no_grad():
-        # Iterate over data.
-        for inputs, _ in test_loader:
-            outputs = model(inputs)
-            _, preds = torch.max(outputs, 1)
-        predictions.extend(preds.numpy())
-    """
-    return predictions
+    pass
 
 
 

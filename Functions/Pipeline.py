@@ -156,7 +156,6 @@ def E_PredictModel(model, test_loader):
         imgname = data[0].split("/")[-1]
         imgname = imgname[2:]
         imagenames.append(imgname)
-        break
     
     
 
@@ -167,8 +166,6 @@ def E_PredictModel(model, test_loader):
         this_prediction = prediction_class[0]
         print(perhaps_image_name, int(this_prediction))
         predictions.append(int(this_prediction))
-        break
-    print(predictions)
 
     df = pd.DataFrame({
         "img_name" : imagenames,
