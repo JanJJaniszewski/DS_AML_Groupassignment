@@ -11,6 +11,7 @@ from torchvision import transforms
 import Config.ConfigMain as conf
 import Config.ConfigPaths as paths
 import Functions.Utils as ut
+from Config.Location import location
 
 
 def A_Folderize(force=False):
@@ -155,7 +156,8 @@ def E_PredictModel(model, test_loader, verbose=0):
 
     for data in test_loader.dataset.imgs:
         imgname = data[0].split("/")[-1]
-        imgname = imgname[2:]
+        if location in ['sebas', 'cynthia', 'jesse']:
+            imgname = imgname[2:]
         imagenames.append(imgname)
 
     predictions = []
