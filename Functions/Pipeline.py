@@ -1,6 +1,7 @@
 from __future__ import print_function, division
 
 import os
+import time
 
 import pandas as pd
 import torch
@@ -109,7 +110,6 @@ def C_PrepareData(input_size):
             transforms.RandomResizedCrop(input_size), # TODO: Check if better crop or transforms.Resize((input_size, input_size)),
             transforms.RandomHorizontalFlip(),
             transforms.RandomRotation(10),
-            transforms.ToTensor(),
             transforms.Normalize(conf.means, conf.stds)
         ]),
         'val': transforms.Compose([
@@ -146,30 +146,40 @@ def D_EvaluateModel():
     pass
 
 
-def E_PredictModel(model, test_loader):
-    print("Predictions")
+def E_PredictModel(model, test_loader, verbose = 0):
+    print("STARTED: Predictions")
     model.eval()
-    #with torch.no_grad():
     imagenames = []
 
     for data in test_loader.dataset.imgs:
         imgname = data[0].split("/")[-1]
         imgname = imgname[2:]
         imagenames.append(imgname)
-    
-    
 
     predictions = []
+    i = 0
     for item_image, _ in test_loader.dataset:
+        # Give an update on the process
+        i += 1
+        if i % 100 == 0:
+            print('Still predicting, dont worry!')
+
+        # Predict
         current_image = torch.unsqueeze(item_image, 0)
         perhaps_image_name, prediction_class = torch.max(model(current_image), 1)
         this_prediction = prediction_class[0]
-        print(perhaps_image_name, int(this_prediction))
+        if verbose > 0:
+            print(perhaps_image_name, int(this_prediction))
         predictions.append(int(this_prediction))
 
     df = pd.DataFrame({
         "img_name" : imagenames,
         "label" : predictions
     })
-    print(df)
-    df.to_csv("test_van_resnet.csv", index=False)
+    if verbose > 0:
+        print(df)
+    df.to_csv(paths.output_data.format(int(time.time())), index=False)
+    print("DONE: Predictions")
+
+    return df
+
