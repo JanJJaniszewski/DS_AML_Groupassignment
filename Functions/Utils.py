@@ -52,7 +52,7 @@ def define_model(model):
     model.fc = nn.Linear(num_fts, number_of_classes)
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     model = model.to(device)
-
+    print(torch.cuda.is_available())
     return model
 
 
