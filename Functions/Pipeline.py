@@ -13,7 +13,7 @@ import Config.ConfigPaths as paths
 import Functions.Utils as ut
 
 
-def A_Folderize(force = False):
+def A_Folderize(force=False):
     """Creates folders that are necessary in general and for training data.
 
     This function creates folders that are necessary in general and for training
@@ -47,8 +47,9 @@ def A_Folderize(force = False):
             os.mkdir(path)
 
         print('Putting pictures in the newly created folders')
-        for picpath in os.listdir(paths.input_train): #picpath is the pathway to one image and the image its img_name,
-            labelfolder = labels_train.loc[labels_train['img_name'] == picpath]['label'].iloc[0] #this returns a number indicating a foodclass
+        for picpath in os.listdir(paths.input_train):  # picpath is the pathway to one image and the image its img_name,
+            labelfolder = labels_train.loc[labels_train['img_name'] == picpath]['label'].iloc[
+                0]  # this returns a number indicating a foodclass
             ut.copy_file(os.path.join(paths.input_train, picpath),
                          os.path.join(paths.A_trainset, str(labelfolder), picpath))
         for picpath in os.listdir(paths.input_test):
@@ -107,13 +108,14 @@ def C_PrepareData(input_size):
     # Just normalization for validation
     data_transforms = {
         'train': transforms.Compose([
-            transforms.RandomResizedCrop(input_size), # TODO: Check if better crop or transforms.Resize((input_size, input_size)),
+            transforms.RandomResizedCrop(input_size),
+            # TODO: Check if better crop or transforms.Resize((input_size, input_size)),
             transforms.RandomHorizontalFlip(),
             transforms.RandomRotation(10),
             transforms.Normalize(conf.means, conf.stds)
         ]),
         'val': transforms.Compose([
-            transforms.Resize(input_size), # TODO: Check if resizing helps or not
+            transforms.Resize(input_size),  # TODO: Check if resizing helps or not
             transforms.CenterCrop(input_size),
             transforms.ToTensor(),
             transforms.Normalize(conf.means, conf.stds)
@@ -146,7 +148,7 @@ def D_EvaluateModel():
     pass
 
 
-def E_PredictModel(model, test_loader, verbose = 0):
+def E_PredictModel(model, test_loader, verbose=0):
     print("STARTED: Predictions")
     model.eval()
     imagenames = []
@@ -173,8 +175,8 @@ def E_PredictModel(model, test_loader, verbose = 0):
         predictions.append(int(this_prediction))
 
     df = pd.DataFrame({
-        "img_name" : imagenames,
-        "label" : predictions
+        "img_name": imagenames,
+        "label": predictions
     })
     if verbose > 0:
         print(df)
@@ -182,4 +184,3 @@ def E_PredictModel(model, test_loader, verbose = 0):
     print("DONE: Predictions")
 
     return df
-

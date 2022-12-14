@@ -1,11 +1,13 @@
 from __future__ import print_function, division
 
-import Functions.Pipeline as pipe
 import torch
 import torchvision
 
-print("PyTorch Version: ",torch.__version__)
-print("Torchvision Version: ",torchvision.__version__)
+import Functions.Pipeline as pipe
+
+print("PyTorch Version: ", torch.__version__)
+print("Torchvision Version: ", torchvision.__version__)
+
 
 def main(*pipeparts):
     if 'A' in pipeparts:

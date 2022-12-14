@@ -1,8 +1,3 @@
-import torch.nn as nn
-from torch import optim
-from torchvision import models
-from torchvision.models import ResNet18_Weights
-import torch
 from Config.Location import location
 
 # Set model name and extract feature flag

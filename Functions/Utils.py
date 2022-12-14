@@ -1,5 +1,5 @@
-from __future__ import print_function
 from __future__ import division
+from __future__ import print_function
 from __future__ import print_function, division
 
 import copy
@@ -12,28 +12,14 @@ import numpy as np
 import pandas as pd
 import torch
 import torch.nn as nn
+import torch.optim as optim
 import torchvision
-from torchvision import datasets, models, transforms
+from torch.utils.data import DataLoader
+from torchvision import models
 from torchvision.models import ResNet18_Weights, ResNet50_Weights
 
 import Config.ConfigMain as conf
 import Config.ConfigPaths as paths
-
-from multiprocessing import freeze_support 
-
-import torch
-import torch.nn as nn
-import torch.optim as optim
-import numpy as np
-import torchvision
-from torchvision import datasets, models, transforms
-import matplotlib.pyplot as plt
-import time
-import os
-import copy
-import Config.ConfigPaths as paths
-import Config.ConfigMain as conf
-from torch.utils.data import DataLoader
 
 
 def get_mean_and_std(loader):
@@ -49,6 +35,7 @@ def get_mean_and_std(loader):
     mean /= total_images_count
     std /= total_images_count
     return mean, std
+
 
 def define_model(model):
     """Modify the fully-connected layer of a PyTorch model to match the number of features and classes in the input data.
@@ -68,7 +55,8 @@ def define_model(model):
 
     return model
 
-def init_optimizer(model_ft, device, feature_extract = True):
+
+def init_optimizer(model_ft, device, feature_extract=True):
     # Send the model to GPU
     model_ft = model_ft.to(device)
 
@@ -132,9 +120,8 @@ def train_nn(model, optimizer, train_loader, test_loader, criterion,
         print(f"Epoch {epoch + 1}: Correct: {running_correct} ({epoch_acc}%); Loss: {epoch_loss}")
 
 
-def predict(model, test_loader): 
+def predict(model, test_loader):
     pass
-
 
 
 def evaluate_model_on_test_set(model, test_loader):
@@ -157,8 +144,10 @@ def make_folders():
         if not os.path.exists(path):
             os.mkdir(path)
 
+
 def copy_file(source, destination):
     shutil.copyfile(source, destination)
+
 
 def train_model(model, train_loader, val_loader, num_epochs=conf.num_epochs, is_inception=False):
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
@@ -181,14 +170,14 @@ def train_model(model, train_loader, val_loader, num_epochs=conf.num_epochs, is_
     print("Params to learn:")
     if conf.feature_extract:
         params_to_update = []
-        for name,param in model.named_parameters():
+        for name, param in model.named_parameters():
             if param.requires_grad == True:
                 params_to_update.append(param)
-                print("\t",name)
+                print("\t", name)
     else:
-        for name,param in model.named_parameters():
+        for name, param in model.named_parameters():
             if param.requires_grad == True:
-                print("\t",name)
+                print("\t", name)
 
     # Observe that all parameters are being optimized
     optimizer = optim.SGD(params_to_update, lr=conf.learning_rate, momentum=conf.momentum)
@@ -205,7 +194,7 @@ def train_model(model, train_loader, val_loader, num_epochs=conf.num_epochs, is_
             if phase == 'train':
                 model.train()  # Set model to training mode
             else:
-                model.eval()   # Set model to evaluate mode
+                model.eval()  # Set model to evaluate mode
 
             running_loss = 0.0
             running_corrects = 0
@@ -235,7 +224,7 @@ def train_model(model, train_loader, val_loader, num_epochs=conf.num_epochs, is_
                         outputs, aux_outputs = model(inputs)
                         loss1 = criterion(outputs, labels)
                         loss2 = criterion(aux_outputs, labels)
-                        loss = loss1 + 0.4*loss2
+                        loss = loss1 + 0.4 * loss2
                     else:
                         outputs = model(inputs)
                         loss = criterion(outputs, labels)
@@ -273,10 +262,12 @@ def train_model(model, train_loader, val_loader, num_epochs=conf.num_epochs, is_
     model.load_state_dict(best_model_wts)
     return model, val_acc_history
 
+
 def set_parameter_requires_grad(model, feature_extracting):
     if feature_extracting:
         for param in model.parameters():
             param.requires_grad = False
+
 
 def initialize_model(model_name, num_classes, feature_extract, use_pretrained=True):
     # Initialize these variables which will be set in this if statement. Each of these
@@ -308,7 +299,7 @@ def initialize_model(model_name, num_classes, feature_extract, use_pretrained=Tr
         model_ft = models.alexnet(pretrained=use_pretrained)
         set_parameter_requires_grad(model_ft, feature_extract)
         num_ftrs = model_ft.classifier[6].in_features
-        model_ft.classifier[6] = nn.Linear(num_ftrs,num_classes)
+        model_ft.classifier[6] = nn.Linear(num_ftrs, num_classes)
         input_size = 224
 
     elif model_name == "vgg":
@@ -317,7 +308,7 @@ def initialize_model(model_name, num_classes, feature_extract, use_pretrained=Tr
         model_ft = models.vgg11_bn(pretrained=use_pretrained)
         set_parameter_requires_grad(model_ft, feature_extract)
         num_ftrs = model_ft.classifier[6].in_features
-        model_ft.classifier[6] = nn.Linear(num_ftrs,num_classes)
+        model_ft.classifier[6] = nn.Linear(num_ftrs, num_classes)
         input_size = 224
 
     elif model_name == "squeezenet":
@@ -325,7 +316,7 @@ def initialize_model(model_name, num_classes, feature_extract, use_pretrained=Tr
         """
         model_ft = models.squeezenet1_0(pretrained=use_pretrained)
         set_parameter_requires_grad(model_ft, feature_extract)
-        model_ft.classifier[1] = nn.Conv2d(512, num_classes, kernel_size=(1,1), stride=(1,1))
+        model_ft.classifier[1] = nn.Conv2d(512, num_classes, kernel_size=(1, 1), stride=(1, 1))
         model_ft.num_classes = num_classes
         input_size = 224
 
@@ -349,11 +340,12 @@ def initialize_model(model_name, num_classes, feature_extract, use_pretrained=Tr
         model_ft.AuxLogits.fc = nn.Linear(num_ftrs, num_classes)
         # Handle the primary net
         num_ftrs = model_ft.fc.in_features
-        model_ft.fc = nn.Linear(num_ftrs,num_classes)
+        model_ft.fc = nn.Linear(num_ftrs, num_classes)
         input_size = 299
 
     else:
-        Exception("Invalid model name, exiting. To change model name, change the model_name variable in Config.ConfigMain")
+        Exception(
+            "Invalid model name, exiting. To change model name, change the model_name variable in Config.ConfigMain")
         exit()
 
     return model_ft, input_size
@@ -369,8 +361,8 @@ def plot_model():
     plt.title("Validation Accuracy vs. Number of Training Epochs")
     plt.xlabel("Training Epochs")
     plt.ylabel("Validation Accuracy")
-    plt.plot(range(1,conf.num_epochs+1),ohist,label="Pretrained")
-    plt.ylim((0,1.))
-    plt.xticks(np.arange(1, conf.num_epochs+1, 1.0))
+    plt.plot(range(1, conf.num_epochs + 1), ohist, label="Pretrained")
+    plt.ylim((0, 1.))
+    plt.xticks(np.arange(1, conf.num_epochs + 1, 1.0))
     plt.legend()
     plt.show()
