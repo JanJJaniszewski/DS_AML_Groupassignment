@@ -161,8 +161,8 @@ def E_PredictModel(model, test_loader, verbose = 0):
     for item_image, _ in test_loader.dataset:
         # Give an update on the process
         i += 1
-        if i % 100 == 0:
-            print('Still predicting, dont worry!')
+        if i % 500 == 0:
+            print(f'Predicted already {i} pictures')
 
         # Predict
         current_image = torch.unsqueeze(item_image, 0)
