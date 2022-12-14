@@ -113,6 +113,7 @@ def C_PrepareData(input_size):
             # TODO: Check if better crop or transforms.Resize((input_size, input_size)),
             transforms.RandomHorizontalFlip(),
             transforms.RandomRotation(10),
+            transforms.ToTensor(),
             transforms.Normalize(conf.means, conf.stds)
         ]),
         'val': transforms.Compose([
