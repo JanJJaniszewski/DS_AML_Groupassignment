@@ -82,14 +82,15 @@ def B_InitModel():
         input_size: the input size of the model
     """
     print('START: B_InitModel')
-    num_classes = len(os.listdir(paths.A_trainset))
+    classes = [name for name in os.listdir(paths.A_trainset) if os.path.isdir(os.path.join(paths.A_trainset, name))]
+    num_classes = len(classes)
     print(f'Number of classes: {num_classes}')
-    model, input_size = ut.initialize_model(conf.model_name, num_classes, conf.feature_extract)
+    model = ut.initialize_model(conf.model_name, num_classes, conf.feature_extract)
     print('DONE: B_InitModel')
-    return model, input_size
+    return model
 
 
-def C_PrepareData(input_size):
+def C_PrepareData():
     """Prepares data for training, validation, and testing.
 
     This function prepares data for training, validation, and testing by
@@ -107,6 +108,8 @@ def C_PrepareData(input_size):
     """
 
     print('START: C_PrepareData')
+    input_size = 224
+
     # image data preparation
     # normalized data=> image=(image-mean)/std
     # Data augmentation and normalization for training
@@ -142,7 +145,7 @@ def C_PrepareData(input_size):
     # Mini-Batch Gradient Descent, start with 32 and explore to increase performance
     train_loader = torch.utils.data.DataLoader(train_dataset, batch_size=conf.batch_size, shuffle=True)
     val_loader = torch.utils.data.DataLoader(val_dataset, batch_size=conf.batch_size, shuffle=True)
-    test_loader = torch.utils.data.DataLoader(test_dataset, batch_size=conf.batch_size, shuffle=True)
+    test_loader = torch.utils.data.DataLoader(test_dataset, batch_size=conf.batch_size, shuffle=False)
     # print(ut.get_mean_and_std(train_loader))
 
     print('DONE: C_PrepareData')
@@ -152,7 +155,7 @@ def C_PrepareData(input_size):
 
 def D_TrainModel(model, train_loader, val_loader, test_loader):
     print('START: D_TrainModel')
-    model, val_acc_history = ut.train_model(model=model, train_loader=train_loader, val_loader=val_loader, test_loader=test_loader, num_epochs=conf.num_epochs, is_inception=False)
+    model, val_acc_history = ut.train_model(model=model, train_loader=train_loader, val_loader=val_loader, test_loader=test_loader, num_epochs=conf.num_epochs)
     print('DONE: D_TrainModel')
     return model, val_acc_history
 

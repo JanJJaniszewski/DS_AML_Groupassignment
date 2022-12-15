@@ -23,6 +23,8 @@ DS_AML_Groupassignment.iml
 modules.xml
 profiles_settings.xml
 vcs.xml
+Config/ConfigMain.py
+ConfigMain.py
 
 # C extensions
 *.so

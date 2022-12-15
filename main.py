@@ -13,9 +13,9 @@ def main(*pipeparts):
     if 'A' in pipeparts:
         pipe.A_Folderize(force=False)
     if 'B' in pipeparts:
-        model, input_size = pipe.B_InitModel()
+        model = pipe.B_InitModel()
     if 'C' in pipeparts:
-        train_loader, val_loader, test_loader = pipe.C_PrepareData(input_size)
+        train_loader, val_loader, test_loader = pipe.C_PrepareData()
     if 'D' in pipeparts:
         model, val_acc_history = pipe.D_TrainModel(model, train_loader, val_loader, test_loader)
     if 'E' in pipeparts:

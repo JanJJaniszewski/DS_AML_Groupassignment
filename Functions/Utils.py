@@ -20,6 +20,7 @@ from torchvision.models import ResNet18_Weights, ResNet50_Weights
 
 import Config.ConfigMain as conf
 import Config.ConfigPaths as paths
+from Config.Location import location
 
 
 def get_mean_and_std(loader):
@@ -35,7 +36,6 @@ def get_mean_and_std(loader):
     mean /= total_images_count
     std /= total_images_count
     return mean, std
-
 
 def define_model(model):
     """Modify the fully-connected layer of a PyTorch model to match the number of features and classes in the input data.
@@ -112,7 +112,7 @@ def copy_file(source, destination):
     shutil.copyfile(source, destination)
 
 
-def train_model(model, train_loader, val_loader, test_loader, num_epochs=conf.num_epochs, is_inception=False):
+def train_model(model, train_loader, val_loader, test_loader, num_epochs=conf.num_epochs):
     version = int(time.time())
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     since = time.time()
@@ -149,6 +149,13 @@ def train_model(model, train_loader, val_loader, test_loader, num_epochs=conf.nu
     # Setup the loss fxn
     criterion = nn.CrossEntropyLoss()
 
+    dataloaders = {
+        'train': train_loader,
+        'val': val_loader,
+        'test': test_loader
+    }
+    assert len(val_loader.dataset) < len(train_loader.dataset), 'ERROR: Validation datasets >= Training dataset'
+
     for epoch in range(num_epochs):
         print('Epoch {}/{}'.format(epoch, num_epochs - 1))
         print('-' * 10)
@@ -164,12 +171,6 @@ def train_model(model, train_loader, val_loader, test_loader, num_epochs=conf.nu
             running_corrects = 0
 
             # Iterate over data.
-            dataloaders = {
-                'train': train_loader,
-                'val': val_loader
-            }
-            assert len(val_loader.dataset) < len(train_loader.dataset), 'ERROR: Validation datasets >= Training dataset'
-
             for data in dataloaders[phase]:
                 inputs, labels = data
                 inputs = inputs.to(device)
@@ -185,15 +186,8 @@ def train_model(model, train_loader, val_loader, test_loader, num_epochs=conf.nu
                     # Special case for inception because in training it has an auxiliary output. In train
                     #   mode we calculate the loss by summing the final output and the auxiliary output
                     #   but in testing we only consider the final output.
-                    if is_inception and phase == 'train':
-                        # From https://discuss.pytorch.org/t/how-to-optimize-inception-model-with-auxiliary-classifiers/7958
-                        outputs, aux_outputs = model(inputs)
-                        loss1 = criterion(outputs, labels)
-                        loss2 = criterion(aux_outputs, labels)
-                        loss = loss1 + 0.4 * loss2
-                    else:
-                        outputs = model(inputs)
-                        loss = criterion(outputs, labels)
+                    outputs = model(inputs)
+                    loss = criterion(outputs, labels)
 
                     _, preds = torch.max(outputs, 1)
 
@@ -215,9 +209,12 @@ def train_model(model, train_loader, val_loader, test_loader, num_epochs=conf.nu
             if phase == 'val' and epoch_acc > best_acc:
                 best_acc = epoch_acc
                 best_model_wts  = copy.deepcopy(model.state_dict())
-                predict_model(model, test_loader, version=version)
             if phase == 'val':
                 val_acc_history.append(epoch_acc)
+
+        if epoch_acc >= best_acc:
+            with torch.set_grad_enabled(False):
+                predict_model(model, dataloaders['test'], version=version, filepath = paths.output_data_automatic)
 
         print()
 
@@ -229,6 +226,12 @@ def train_model(model, train_loader, val_loader, test_loader, num_epochs=conf.nu
     model.load_state_dict(best_model_wts)
     return model, val_acc_history
 
+def find_class(idxz):
+    classes = [name for name in os.listdir(paths.A_trainset) if os.path.isdir(os.path.join(paths.A_trainset, name))]
+    classes.sort()
+    idx_to_class = {i: classes[i] for i in range(len(classes))}
+    retclass = idx_to_class[idxz]
+    return retclass
 
 def set_parameter_requires_grad(model, feature_extracting):
     if feature_extracting:
@@ -240,7 +243,7 @@ def initialize_model(model_name, num_classes, feature_extract, use_pretrained=Tr
     # Initialize these variables which will be set in this if statement. Each of these
     #   variables is model specific.
     model_ft = None
-    input_size = 0
+    input_size = 224
 
     if model_name == "resnet18":
         """ Resnet18
@@ -249,7 +252,6 @@ def initialize_model(model_name, num_classes, feature_extract, use_pretrained=Tr
         set_parameter_requires_grad(model_ft, feature_extract)
         num_ftrs = model_ft.fc.in_features
         model_ft.fc = nn.Linear(num_ftrs, num_classes)
-        input_size = 224
 
     elif model_name == "resnet50":
         """ Resnet50
@@ -258,7 +260,6 @@ def initialize_model(model_name, num_classes, feature_extract, use_pretrained=Tr
         set_parameter_requires_grad(model_ft, feature_extract)
         num_ftrs = model_ft.fc.in_features
         model_ft.fc = nn.Linear(num_ftrs, num_classes)
-        input_size = 224
 
     elif model_name == "alexnet":
         """ Alexnet
@@ -267,7 +268,6 @@ def initialize_model(model_name, num_classes, feature_extract, use_pretrained=Tr
         set_parameter_requires_grad(model_ft, feature_extract)
         num_ftrs = model_ft.classifier[6].in_features
         model_ft.classifier[6] = nn.Linear(num_ftrs, num_classes)
-        input_size = 224
 
     elif model_name == "vgg":
         """ VGG11_bn
@@ -276,7 +276,6 @@ def initialize_model(model_name, num_classes, feature_extract, use_pretrained=Tr
         set_parameter_requires_grad(model_ft, feature_extract)
         num_ftrs = model_ft.classifier[6].in_features
         model_ft.classifier[6] = nn.Linear(num_ftrs, num_classes)
-        input_size = 224
 
     elif model_name == "squeezenet":
         """ Squeezenet
@@ -285,7 +284,6 @@ def initialize_model(model_name, num_classes, feature_extract, use_pretrained=Tr
         set_parameter_requires_grad(model_ft, feature_extract)
         model_ft.classifier[1] = nn.Conv2d(512, num_classes, kernel_size=(1, 1), stride=(1, 1))
         model_ft.num_classes = num_classes
-        input_size = 224
 
     elif model_name == "densenet":
         """ Densenet
@@ -294,28 +292,13 @@ def initialize_model(model_name, num_classes, feature_extract, use_pretrained=Tr
         set_parameter_requires_grad(model_ft, feature_extract)
         num_ftrs = model_ft.classifier.in_features
         model_ft.classifier = nn.Linear(num_ftrs, num_classes)
-        input_size = 224
-
-    elif model_name == "inception":
-        """ Inception v3
-        Be careful, expects (299,299) sized images and has auxiliary output
-        """
-        model_ft = models.inception_v3(pretrained=use_pretrained)
-        set_parameter_requires_grad(model_ft, feature_extract)
-        # Handle the auxilary net
-        num_ftrs = model_ft.AuxLogits.fc.in_features
-        model_ft.AuxLogits.fc = nn.Linear(num_ftrs, num_classes)
-        # Handle the primary net
-        num_ftrs = model_ft.fc.in_features
-        model_ft.fc = nn.Linear(num_ftrs, num_classes)
-        input_size = 299
 
     else:
         Exception(
             "Invalid model name, exiting. To change model name, change the model_name variable in Config.ConfigMain")
         exit()
 
-    return model_ft, input_size
+    return model_ft
 
 
 def plot_model():
@@ -334,11 +317,12 @@ def plot_model():
     plt.legend()
     plt.show()
 
-def predict_model(model, test_loader, verbose=0, version=int(time.time())):
-    print("STARTED: Predictions")
-    model.eval()
-    imagenames = []
 
+def predict_model(model, test_loader, verbose=0, version=int(time.time()), filepath = paths.output_data):
+    model.eval()
+
+    # Image names
+    imagenames = []
     for data in test_loader.dataset.imgs:
         imgname = data[0].split("/")[-1]
         if location in ['sebas', 'cynthia', 'jesse']:
@@ -346,20 +330,12 @@ def predict_model(model, test_loader, verbose=0, version=int(time.time())):
         imagenames.append(imgname)
 
     predictions = []
-    i = 0
-    for item_image, _ in test_loader.dataset:
-        # Give an update on the process
-        i += 1
-        if (i % 500 == 0) & verbose > 0:
-            print(f'Predicted already {i} pictures')
-
-        # Predict
-        current_image = torch.unsqueeze(item_image, 0)
-        perhaps_image_name, prediction_class = torch.max(model(current_image), 1)
-        this_prediction = prediction_class[0] + 1
-        if verbose > 1:
-            print(perhaps_image_name, int(this_prediction))
-        predictions.append(int(this_prediction))
+    for inputs, _ in test_loader:
+        inputs = inputs.to('cpu')
+        outputs = model(inputs)
+        _, preds = torch.max(outputs, 1)
+        preds = [find_class(int(idx)) for idx in preds]
+        predictions += preds
 
     df = pd.DataFrame({
         "img_name": imagenames,
@@ -367,7 +343,6 @@ def predict_model(model, test_loader, verbose=0, version=int(time.time())):
     })
     if verbose > 1:
         print(df)
-    df.to_csv(paths.output_data.format(version), index=False)
-    print("DONE: Predictions")
+    df.to_csv(filepath.format(int(time.time())), index=False)
 
     return df
