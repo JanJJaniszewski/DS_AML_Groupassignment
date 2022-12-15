@@ -150,51 +150,16 @@ def C_PrepareData(input_size):
     return train_loader, val_loader, test_loader
 
 
-def D_TrainModel(model, train_loader, val_loader):
+def D_TrainModel(model, train_loader, val_loader, test_loader):
     print('START: D_TrainModel')
-    model, val_acc_history = ut.train_model(model=model, train_loader=train_loader, val_loader=val_loader, num_epochs=conf.num_epochs, is_inception=False)
+    model, val_acc_history = ut.train_model(model=model, train_loader=train_loader, val_loader=val_loader, test_loader=test_loader, num_epochs=conf.num_epochs, is_inception=False)
     print('DONE: D_TrainModel')
     return model, val_acc_history
 
 
-def D_EvaluateModel():
-    pass
-
-
-def E_PredictModel(model, test_loader, verbose=0):
+def E_PredictModel(model, test_loader, verbose=0, version=int(time.time())):
     print("STARTED: Predictions")
-    model.eval()
-    imagenames = []
-
-    for data in test_loader.dataset.imgs:
-        imgname = data[0].split("/")[-1]
-        if location in ['sebas', 'cynthia', 'jesse']:
-            imgname = imgname[2:]
-        imagenames.append(imgname)
-
-    predictions = []
-    i = 0
-    for item_image, _ in test_loader.dataset:
-        # Give an update on the process
-        i += 1
-        if i % 500 == 0:
-            print(f'Predicted already {i} pictures')
-
-        # Predict
-        current_image = torch.unsqueeze(item_image, 0)
-        perhaps_image_name, prediction_class = torch.max(model(current_image), 1)
-        this_prediction = prediction_class[0]
-        if verbose > 0:
-            print(perhaps_image_name, int(this_prediction))
-        predictions.append(int(this_prediction))
-
-    df = pd.DataFrame({
-        "img_name": imagenames,
-        "label": predictions
-    })
-    if verbose > 0:
-        print(df)
-    df.to_csv(paths.output_data.format(int(time.time())), index=False)
+    df= ut.predict_model(model, test_loader, verbose=verbose, version=version)
     print("DONE: Predictions")
 
     return df
