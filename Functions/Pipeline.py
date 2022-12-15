@@ -125,10 +125,15 @@ def C_PrepareData(input_size):
             transforms.CenterCrop(input_size),
             transforms.ToTensor(),
             transforms.Normalize(conf.means, conf.stds)
+        ]),
+        # WARNING: KEEP SAME TO "val" transformer!!!!!!
+        'test': transforms.Compose([
+            transforms.Resize(input_size),  # TODO: Check if resizing helps or not
+            transforms.CenterCrop(input_size),
+            transforms.ToTensor(),
+            transforms.Normalize(conf.means, conf.stds)
         ])
     }
-
-    data_transforms['test'] = data_transforms['val']
 
     train_dataset = torchvision.datasets.ImageFolder(root=paths.A_trainset, transform=data_transforms['train'])
     val_dataset = torchvision.datasets.ImageFolder(root=paths.A_validationset, transform=data_transforms['val'])
@@ -138,6 +143,8 @@ def C_PrepareData(input_size):
     train_loader = torch.utils.data.DataLoader(train_dataset, batch_size=32, shuffle=True)
     val_loader = torch.utils.data.DataLoader(val_dataset, batch_size=32, shuffle=True)
     test_loader = torch.utils.data.DataLoader(test_dataset, batch_size=32, shuffle=True)
+    # print(ut.get_mean_and_std(train_loader))
+
     print('DONE: C_PrepareData')
 
     return train_loader, val_loader, test_loader
