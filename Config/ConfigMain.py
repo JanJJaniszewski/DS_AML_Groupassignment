@@ -13,8 +13,8 @@ num_epochs = 2
 batch_size = 100
 
 # Set mean and std values for normalization
-means = [0.6366, 0.5437, 0.4454]
-stds = [0.2235, 0.2422, 0.2654]
+means = [0.6178, 0.5074, 0.3895]
+stds = [0.2437, 0.2478, 0.2533]
 
 # Set learning rate and momentum
 learning_rate = 0.001
