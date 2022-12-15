@@ -16,7 +16,8 @@ elif location == 'jesse':
     throughput_path = './Data/Throughput/'
     A_trainset = throughput_path + 'A_folderize/train/'
     A_testset = throughput_path + 'A_folderize/test/'
-    A_validationset = os.path.join(throughput_path, 'A_folderize/train')
+    A_validationset = os.path.join(throughput_path, 'A_folderize/validation')
+
 elif location == 'sebas':
     input_path = './Data/Input/'
     input_train = input_path + 'train_set/train_set/train_set/'
@@ -28,7 +29,8 @@ elif location == 'sebas':
     throughput_path = './Data/Throughput/'
     A_trainset = throughput_path + 'A_folderize/train/'
     A_testset = throughput_path + 'A_folderize/test/'
-    A_validationset = os.path.join(throughput_path, 'A_folderize/train')
+    A_validationset = os.path.join(throughput_path, 'A_folderize/validation')
+
 elif location == 'jan':
     input_path = './Data/Input/'
     input_train = input_path + 'train_set/train_set/train_set/'
@@ -40,7 +42,7 @@ elif location == 'jan':
     throughput_path = './Data/Throughput/'
     A_trainset = throughput_path + 'A_folderize/train'
     A_testset = throughput_path + 'A_folderize/test'
-    A_validationset = os.path.join(throughput_path, 'A_folderize/train')
+    A_validationset = os.path.join(throughput_path, 'A_folderize/validation')
 
 # Top level data directory. Here we assume the format of the directory conforms
 #   to the ImageFolder structure
