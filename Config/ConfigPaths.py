@@ -7,6 +7,16 @@ if location == 'cinthy':
     output_data = './Data/Output/Predictions_V{}.csv'
 elif location == 'jesse':
     output_data = './Data/Output/Predictions_V{}.csv'
+    input_path = './Data/Input/'
+    input_train = input_path + 'train_set/train_set/train_set/'
+    input_test = input_path + 'test_set/test_set/test_set/'
+    input_labels_test = input_path + 'sample.csv'
+    input_labels_train = input_path + 'train_labels.csv'
+    output_data = './Data/Output/Predictions_V{}.csv'
+    throughput_path = './Data/Throughput/'
+    A_trainset = throughput_path + 'A_folderize/train/'
+    A_testset = throughput_path + 'A_folderize/test/'
+    A_validationset = os.path.join(throughput_path, 'A_folderize/train')
 elif location == 'sebas':
     input_path = './Data/Input/'
     input_train = input_path + 'train_set/train_set/train_set/'
