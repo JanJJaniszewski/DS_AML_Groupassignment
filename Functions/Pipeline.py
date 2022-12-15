@@ -144,7 +144,7 @@ def C_PrepareData():
 
     # Mini-Batch Gradient Descent, start with 32 and explore to increase performance
     train_loader = torch.utils.data.DataLoader(train_dataset, batch_size=conf.batch_size, shuffle=True)
-    val_loader = torch.utils.data.DataLoader(val_dataset, batch_size=conf.batch_size, shuffle=False)
+    val_loader = torch.utils.data.DataLoader(val_dataset, batch_size=conf.batch_size, shuffle=True)
     test_loader = torch.utils.data.DataLoader(test_dataset, batch_size=conf.batch_size, shuffle=False)
     # print(ut.get_mean_and_std(train_loader))
 
