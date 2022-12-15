@@ -343,6 +343,6 @@ def predict_model(model, test_loader, verbose=0, version=int(time.time()), filep
     })
     if verbose > 1:
         print(df)
-    df.to_csv(filepath.format(int(time.time())), index=False)
+    df.to_csv(filepath.format(version, index=False))
 
     return df
