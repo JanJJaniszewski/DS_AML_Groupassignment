@@ -13,6 +13,7 @@ elif location == 'jesse':
     input_labels_test = input_path + 'sample.csv'
     input_labels_train = input_path + 'train_labels.csv'
     output_data = './Data/Output/Predictions_V{}.csv'
+    output_data_automatic = './Data/Output/Predictions_during_training_V{}.csv'
     throughput_path = './Data/Throughput/'
     A_trainset = throughput_path + 'A_folderize/train/'
     A_testset = throughput_path + 'A_folderize/test/'
@@ -25,6 +26,7 @@ elif location == 'sebas':
     input_labels_test = input_path + 'sample.csv'
     input_labels_train = input_path + 'train_labels.csv'
     output_data = './Data/Output/Predictions_V{}.csv'
+    output_data_automatic = './Data/Output/Predictions_during_training_V{}.csv'
 
     throughput_path = './Data/Throughput/'
     A_trainset = throughput_path + 'A_folderize/train/'
@@ -38,6 +40,7 @@ elif location == 'jan':
     input_labels_test = input_path + 'sample.csv'
     input_labels_train = input_path + 'train_labels.csv'
     output_data = './Data/Output/Predictions_V{}.csv'
+    output_data_automatic = './Data/Output/Predictions_during_training_V{}.csv'
 
     throughput_path = './Data/Throughput/'
     A_trainset = throughput_path + 'A_folderize/train'
