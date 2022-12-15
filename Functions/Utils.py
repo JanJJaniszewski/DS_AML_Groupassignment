@@ -83,43 +83,6 @@ def init_optimizer(model_ft, device, feature_extract=True):
     return optimizer_ft
 
 
-def train_nn(model, optimizer, train_loader, test_loader, criterion,
-             n_epochs):
-    device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-
-    for epoch in range(n_epochs):
-        model.train()
-        running_loss = 0.0
-        running_correct = 0.0
-        total = 0
-
-        for data in train_loader:
-            images, labels = data
-            images = images.to(device)
-            labels = labels.to(device)
-            total += labels.size(0)
-
-            optimizer.zero_grad()
-
-            outputs = model(images)
-
-            _, predicted = torch.max(outputs.data, 1)
-
-            loss = criterion(outputs, labels)
-
-            loss.backward()
-
-            optimizer.step()
-
-            running_loss += loss.item()
-            running_correct += (labels == predicted).sum().item()
-
-        epoch_loss = running_loss / len(train_loader)
-        epoch_acc = running_correct / total
-
-        print(f"Epoch {epoch + 1}: Correct: {running_correct} ({epoch_acc}%); Loss: {epoch_loss}")
-
-
 def predict(model, test_loader):
     pass
 
@@ -140,7 +103,7 @@ def show_transf_images(data):
 
 
 def make_folders():
-    for path in [paths.A_trainset, paths.A_testset]:
+    for path in [paths.A_trainset, paths.A_testset, paths.A_validationset]:
         if not os.path.exists(path):
             os.mkdir(path)
 
