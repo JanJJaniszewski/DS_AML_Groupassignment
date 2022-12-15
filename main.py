@@ -20,8 +20,7 @@ def main(*pipeparts):
         model, val_acc_history = pipe.D_TrainModel(model, train_loader, val_loader)
     if 'E' in pipeparts:
         predictions = pipe.E_PredictModel(model, test_loader)
-
-    return predictions
+        return predictions
 
 
 if __name__ == '__main__':
