@@ -17,11 +17,10 @@ def main(*pipeparts):
     if 'C' in pipeparts:
         train_loader, val_loader, test_loader = pipe.C_PrepareData(input_size)
     if 'D' in pipeparts:
-        model = pipe.D_TrainModel(model, train_loader, val_loader)
+        model, val_acc_history = pipe.D_TrainModel(model, train_loader, val_loader, test_loader)
     if 'E' in pipeparts:
         predictions = pipe.E_PredictModel(model, test_loader)
-
-    return predictions
+        return predictions
 
 
 if __name__ == '__main__':

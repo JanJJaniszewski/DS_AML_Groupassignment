@@ -52,7 +52,7 @@ def define_model(model):
     model.fc = nn.Linear(num_fts, number_of_classes)
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     model = model.to(device)
-
+    print(torch.cuda.is_available())
     return model
 
 
@@ -83,43 +83,6 @@ def init_optimizer(model_ft, device, feature_extract=True):
     return optimizer_ft
 
 
-def train_nn(model, optimizer, train_loader, test_loader, criterion,
-             n_epochs):
-    device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-
-    for epoch in range(n_epochs):
-        model.train()
-        running_loss = 0.0
-        running_correct = 0.0
-        total = 0
-
-        for data in train_loader:
-            images, labels = data
-            images = images.to(device)
-            labels = labels.to(device)
-            total += labels.size(0)
-
-            optimizer.zero_grad()
-
-            outputs = model(images)
-
-            _, predicted = torch.max(outputs.data, 1)
-
-            loss = criterion(outputs, labels)
-
-            loss.backward()
-
-            optimizer.step()
-
-            running_loss += loss.item()
-            running_correct += (labels == predicted).sum().item()
-
-        epoch_loss = running_loss / len(train_loader)
-        epoch_acc = running_correct / total
-
-        print(f"Epoch {epoch + 1}: Correct: {running_correct} ({epoch_acc}%); Loss: {epoch_loss}")
-
-
 def predict(model, test_loader):
     pass
 
@@ -140,7 +103,7 @@ def show_transf_images(data):
 
 
 def make_folders():
-    for path in [paths.A_trainset, paths.A_testset]:
+    for path in [paths.A_trainset, paths.A_testset, paths.A_validationset]:
         if not os.path.exists(path):
             os.mkdir(path)
 
@@ -149,7 +112,8 @@ def copy_file(source, destination):
     shutil.copyfile(source, destination)
 
 
-def train_model(model, train_loader, val_loader, num_epochs=conf.num_epochs, is_inception=False):
+def train_model(model, train_loader, val_loader, test_loader, num_epochs=conf.num_epochs, is_inception=False):
+    version = int(time.time())
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     since = time.time()
     val_acc_history = []
@@ -204,6 +168,8 @@ def train_model(model, train_loader, val_loader, num_epochs=conf.num_epochs, is_
                 'train': train_loader,
                 'val': val_loader
             }
+            assert len(val_loader.dataset) < len(train_loader.dataset), 'ERROR: Validation datasets >= Training dataset'
+
             for data in dataloaders[phase]:
                 inputs, labels = data
                 inputs = inputs.to(device)
@@ -248,7 +214,8 @@ def train_model(model, train_loader, val_loader, num_epochs=conf.num_epochs, is_
             # deep copy the model
             if phase == 'val' and epoch_acc > best_acc:
                 best_acc = epoch_acc
-                best_model_wts = copy.deepcopy(model.state_dict())
+                best_model_wts  = copy.deepcopy(model.state_dict())
+                predict_model(model, test_loader, version=version)
             if phase == 'val':
                 val_acc_history.append(epoch_acc)
 
@@ -366,3 +333,41 @@ def plot_model():
     plt.xticks(np.arange(1, conf.num_epochs + 1, 1.0))
     plt.legend()
     plt.show()
+
+def predict_model(model, test_loader, verbose=0, version=int(time.time())):
+    print("STARTED: Predictions")
+    model.eval()
+    imagenames = []
+
+    for data in test_loader.dataset.imgs:
+        imgname = data[0].split("/")[-1]
+        if location in ['sebas', 'cynthia', 'jesse']:
+            imgname = imgname[2:]
+        imagenames.append(imgname)
+
+    predictions = []
+    i = 0
+    for item_image, _ in test_loader.dataset:
+        # Give an update on the process
+        i += 1
+        if (i % 500 == 0) & verbose > 0:
+            print(f'Predicted already {i} pictures')
+
+        # Predict
+        current_image = torch.unsqueeze(item_image, 0)
+        perhaps_image_name, prediction_class = torch.max(model(current_image), 1)
+        this_prediction = prediction_class[0] + 1
+        if verbose > 1:
+            print(perhaps_image_name, int(this_prediction))
+        predictions.append(int(this_prediction))
+
+    df = pd.DataFrame({
+        "img_name": imagenames,
+        "label": predictions
+    })
+    if verbose > 1:
+        print(df)
+    df.to_csv(paths.output_data.format(version), index=False)
+    print("DONE: Predictions")
+
+    return df

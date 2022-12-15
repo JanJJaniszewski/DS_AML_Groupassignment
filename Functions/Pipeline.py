@@ -1,6 +1,7 @@
 from __future__ import print_function, division
 
 import os
+import re
 import time
 
 import pandas as pd
@@ -38,21 +39,30 @@ def A_Folderize(force=False):
     labels_train = pd.read_csv(paths.input_labels_train)
 
     print('Creating folders that are necessary for training data')
-    pathh = os.path.join(paths.A_trainset, '0')
-    if (not os.path.exists(pathh)) | force:
-        for label in labels_train['label'].unique():
-            path = os.path.join(paths.A_trainset, str(label))
-            os.mkdir(path)
-        for label in labels_test['label'].unique():
-            path = os.path.join(paths.A_testset, str(label))
-            os.mkdir(path)
+    for label in labels_train['label'].unique():
+        path = os.path.join(paths.A_trainset, str(label))
+        os.mkdir(path)
+    for label in labels_train['label'].unique():
+        path = os.path.join(paths.A_validationset, str(label))
+        os.mkdir(path)
+    for label in labels_test['label'].unique():
+        path = os.path.join(paths.A_testset, str(label))
+        os.mkdir(path)
 
         print('Putting pictures in the newly created folders')
         for picpath in os.listdir(paths.input_train):  # picpath is the pathway to one image and the image its img_name,
             labelfolder = labels_train.loc[labels_train['img_name'] == picpath]['label'].iloc[
                 0]  # this returns a number indicating a foodclass
-            ut.copy_file(os.path.join(paths.input_train, picpath),
-                         os.path.join(paths.A_trainset, str(labelfolder), picpath))
+
+            # Validation set: Everything that is dividable by 4, else training set -> (25% validation set)
+            idx = int(re.findall(r'\d+', picpath)[0])
+            if (idx % 5) == 0:
+                ut.copy_file(os.path.join(paths.input_train, picpath),
+                             os.path.join(paths.A_validationset, str(labelfolder), picpath))
+            else:
+                ut.copy_file(os.path.join(paths.input_train, picpath),
+                             os.path.join(paths.A_trainset, str(labelfolder), picpath))
+
         for picpath in os.listdir(paths.input_test):
             labelfolder = labels_test.loc[labels_test['img_name'] == picpath]['label'].iloc[0]
             ut.copy_file(os.path.join(paths.input_test, picpath),
@@ -73,6 +83,7 @@ def B_InitModel():
     """
     print('START: B_InitModel')
     num_classes = len(os.listdir(paths.A_trainset))
+    print(f'Number of classes: {num_classes}')
     model, input_size = ut.initialize_model(conf.model_name, num_classes, conf.feature_extract)
     print('DONE: B_InitModel')
     return model, input_size
@@ -96,13 +107,6 @@ def C_PrepareData(input_size):
     """
 
     print('START: C_PrepareData')
-    # resize, pixels. resize depending on data, we have to explore other sizes to check for performance
-    training_transforms = transforms.Compose([transforms.Resize((input_size, input_size)), transforms.ToTensor()])
-    print(training_transforms)
-
-    train_dataset = torchvision.datasets.ImageFolder(root=paths.A_trainset, transform=training_transforms)
-    train_loader = torch.utils.data.DataLoader(dataset=train_dataset, batch_size=32, shuffle=False)
-
     # image data preparation
     # normalized data=> image=(image-mean)/std
     # Data augmentation and normalization for training
@@ -121,69 +125,41 @@ def C_PrepareData(input_size):
             transforms.CenterCrop(input_size),
             transforms.ToTensor(),
             transforms.Normalize(conf.means, conf.stds)
+        ]),
+        # WARNING: KEEP SAME TO "val" transformer!!!!!!
+        'test': transforms.Compose([
+            transforms.Resize(input_size),  # TODO: Check if resizing helps or not
+            transforms.CenterCrop(input_size),
+            transforms.ToTensor(),
+            transforms.Normalize(conf.means, conf.stds)
         ])
     }
-
-    data_transforms['test'] = data_transforms['val']
 
     train_dataset = torchvision.datasets.ImageFolder(root=paths.A_trainset, transform=data_transforms['train'])
     val_dataset = torchvision.datasets.ImageFolder(root=paths.A_validationset, transform=data_transforms['val'])
     test_dataset = torchvision.datasets.ImageFolder(root=paths.A_testset, transform=data_transforms['test'])
 
     # Mini-Batch Gradient Descent, start with 32 and explore to increase performance
-    train_loader = torch.utils.data.DataLoader(train_dataset, batch_size=32, shuffle=True)
-    val_loader = torch.utils.data.DataLoader(val_dataset, batch_size=32, shuffle=True)
-    test_loader = torch.utils.data.DataLoader(test_dataset, batch_size=32, shuffle=True)
+    train_loader = torch.utils.data.DataLoader(train_dataset, batch_size=conf.batch_size, shuffle=True)
+    val_loader = torch.utils.data.DataLoader(val_dataset, batch_size=conf.batch_size, shuffle=True)
+    test_loader = torch.utils.data.DataLoader(test_dataset, batch_size=conf.batch_size, shuffle=True)
+    # print(ut.get_mean_and_std(train_loader))
+
     print('DONE: C_PrepareData')
 
     return train_loader, val_loader, test_loader
 
 
-def D_TrainModel(model, train_loader, test_loader):
+def D_TrainModel(model, train_loader, val_loader, test_loader):
     print('START: D_TrainModel')
-    model = ut.train_model(model, train_loader, test_loader, num_epochs=conf.num_epochs, is_inception=False)
+    model, val_acc_history = ut.train_model(model=model, train_loader=train_loader, val_loader=val_loader, test_loader=test_loader, num_epochs=conf.num_epochs, is_inception=False)
     print('DONE: D_TrainModel')
-    return model
+    return model, val_acc_history
 
 
-def D_EvaluateModel():
-    pass
-
-
-def E_PredictModel(model, test_loader, verbose=0):
+def E_PredictModel(model, test_loader, verbose=0, version=int(time.time())):
     print("STARTED: Predictions")
-    model.eval()
-    imagenames = []
-
-    for data in test_loader.dataset.imgs:
-        imgname = data[0].split("/")[-1]
-        if location in ['sebas', 'cynthia', 'jesse']:
-            imgname = imgname[2:]
-        imagenames.append(imgname)
-
-    predictions = []
-    i = 0
-    for item_image, _ in test_loader.dataset:
-        # Give an update on the process
-        i += 1
-        if i % 500 == 0:
-            print(f'Predicted already {i} pictures')
-
-        # Predict
-        current_image = torch.unsqueeze(item_image, 0)
-        perhaps_image_name, prediction_class = torch.max(model(current_image), 1)
-        this_prediction = prediction_class[0]
-        if verbose > 0:
-            print(perhaps_image_name, int(this_prediction))
-        predictions.append(int(this_prediction))
-
-    df = pd.DataFrame({
-        "img_name": imagenames,
-        "label": predictions
-    })
-    if verbose > 0:
-        print(df)
-    df.to_csv(paths.output_data.format(int(time.time())), index=False)
+    df= ut.predict_model(model, test_loader, verbose=verbose, version=version)
     print("DONE: Predictions")
 
     return df
