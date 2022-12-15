@@ -55,7 +55,11 @@ def A_Folderize(force=False):
                 0]  # this returns a number indicating a foodclass
 
             # Validation set: Everything that is dividable by 4, else training set -> (25% validation set)
-            idx = int(re.findall(r'\d+', picpath)[0])
+            try:
+                idx = int(re.findall(r'\d+', picpath)[0])
+            except IndexError:
+                idx = 4
+
             if (idx % 5) == 0:
                 ut.copy_file(os.path.join(paths.input_train, picpath),
                              os.path.join(paths.A_validationset, str(labelfolder), picpath))
