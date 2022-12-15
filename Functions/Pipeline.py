@@ -140,9 +140,9 @@ def C_PrepareData(input_size):
     test_dataset = torchvision.datasets.ImageFolder(root=paths.A_testset, transform=data_transforms['test'])
 
     # Mini-Batch Gradient Descent, start with 32 and explore to increase performance
-    train_loader = torch.utils.data.DataLoader(train_dataset, batch_size=32, shuffle=True)
-    val_loader = torch.utils.data.DataLoader(val_dataset, batch_size=32, shuffle=True)
-    test_loader = torch.utils.data.DataLoader(test_dataset, batch_size=32, shuffle=True)
+    train_loader = torch.utils.data.DataLoader(train_dataset, batch_size=conf.batch_size, shuffle=True)
+    val_loader = torch.utils.data.DataLoader(val_dataset, batch_size=conf.batch_size, shuffle=True)
+    test_loader = torch.utils.data.DataLoader(test_dataset, batch_size=conf.batch_size, shuffle=True)
     # print(ut.get_mean_and_std(train_loader))
 
     print('DONE: C_PrepareData')
@@ -150,9 +150,9 @@ def C_PrepareData(input_size):
     return train_loader, val_loader, test_loader
 
 
-def D_TrainModel(model, train_loader, test_loader):
+def D_TrainModel(model, train_loader, val_loader):
     print('START: D_TrainModel')
-    model, val_acc_history = ut.train_model(model, train_loader, test_loader, num_epochs=conf.num_epochs, is_inception=False)
+    model, val_acc_history = ut.train_model(model=model, train_loader=train_loader, val_loader=val_loader, num_epochs=conf.num_epochs, is_inception=False)
     print('DONE: D_TrainModel')
     return model, val_acc_history
 
