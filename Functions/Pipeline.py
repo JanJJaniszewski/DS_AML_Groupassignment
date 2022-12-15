@@ -73,6 +73,7 @@ def B_InitModel():
     """
     print('START: B_InitModel')
     num_classes = len(os.listdir(paths.A_trainset))
+    print(f'Number of classes: {num_classes}')
     model, input_size = ut.initialize_model(conf.model_name, num_classes, conf.feature_extract)
     print('DONE: B_InitModel')
     return model, input_size
@@ -96,13 +97,6 @@ def C_PrepareData(input_size):
     """
 
     print('START: C_PrepareData')
-    # resize, pixels. resize depending on data, we have to explore other sizes to check for performance
-    training_transforms = transforms.Compose([transforms.Resize((input_size, input_size)), transforms.ToTensor()])
-    print(training_transforms)
-
-    train_dataset = torchvision.datasets.ImageFolder(root=paths.A_trainset, transform=training_transforms)
-    train_loader = torch.utils.data.DataLoader(dataset=train_dataset, batch_size=32, shuffle=False)
-
     # image data preparation
     # normalized data=> image=(image-mean)/std
     # Data augmentation and normalization for training
@@ -141,9 +135,9 @@ def C_PrepareData(input_size):
 
 def D_TrainModel(model, train_loader, test_loader):
     print('START: D_TrainModel')
-    model = ut.train_model(model, train_loader, test_loader, num_epochs=conf.num_epochs, is_inception=False)
+    model, val_acc_history = ut.train_model(model, train_loader, test_loader, num_epochs=conf.num_epochs, is_inception=False)
     print('DONE: D_TrainModel')
-    return model
+    return model, val_acc_history
 
 
 def D_EvaluateModel():
