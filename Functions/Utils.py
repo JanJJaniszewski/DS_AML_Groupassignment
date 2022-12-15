@@ -112,7 +112,7 @@ def copy_file(source, destination):
     shutil.copyfile(source, destination)
 
 
-def train_model(model, train_loader, val_loader, test_loader, num_epochs=conf.num_epochs):
+def train_model(model, dataloaders, num_epochs=conf.num_epochs):
     version = int(time.time())
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     since = time.time()
@@ -149,20 +149,19 @@ def train_model(model, train_loader, val_loader, test_loader, num_epochs=conf.nu
     # Setup the loss fxn
     criterion = nn.CrossEntropyLoss()
 
-    dataloaders = {
-        'train': train_loader,
-        'val': val_loader,
-        'test': test_loader
-    }
-    assert len(val_loader.dataset) < len(train_loader.dataset), 'ERROR: Validation datasets >= Training dataset'
+    assert len(dataloaders['val'].dataset) < len(dataloaders['train1'].dataset), 'ERROR: Validation datasets >= Training dataset'
+
+    dataloaders['val2'] = dataloaders['val']
+    dataloaders['val3'] = dataloaders['val']
 
     for epoch in range(num_epochs):
         print('Epoch {}/{}'.format(epoch, num_epochs - 1))
         print('-' * 10)
 
         # Each epoch has a training and validation phase
-        for phase in ['train', 'val']:
-            if phase == 'train':
+        for phase in ['train3', 'val3', 'train2', 'val2', 'train1', 'val']:
+            is_train = 'train' in phase
+            if is_train:
                 model.train()  # Set model to training mode
             else:
                 model.eval()  # Set model to evaluate mode
@@ -181,7 +180,7 @@ def train_model(model, train_loader, val_loader, test_loader, num_epochs=conf.nu
 
                 # forward
                 # track history if only in train
-                with torch.set_grad_enabled(phase == 'train'):
+                with torch.set_grad_enabled(is_train):
                     # Get model outputs and calculate loss
                     # Special case for inception because in training it has an auxiliary output. In train
                     #   mode we calculate the loss by summing the final output and the auxiliary output
@@ -192,7 +191,7 @@ def train_model(model, train_loader, val_loader, test_loader, num_epochs=conf.nu
                     _, preds = torch.max(outputs, 1)
 
                     # backward + optimize only if in training phase
-                    if phase == 'train':
+                    if is_train:
                         loss.backward()
                         optimizer.step()
 
