@@ -16,8 +16,6 @@ elif location == 'jesse':
     throughput_path = './Data/Throughput/'
     A_trainset = throughput_path + 'A_folderize/train/'
     A_testset = throughput_path + 'A_folderize/test/'
-    A_validationset = os.path.join(throughput_path, 'A_folderize/validation')
-
 elif location == 'sebas':
     input_path = './Data/Input/'
     input_train = input_path + 'train_set/train_set/train_set/'
