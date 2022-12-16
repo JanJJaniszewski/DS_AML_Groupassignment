@@ -136,6 +136,8 @@ def train_model(model, optimizer, scheduler, dataloaders, num_epochs=conf.num_ep
     for epoch in range(num_epochs):
         print('Epoch {}/{}'.format(epoch, num_epochs - 1))
         print('-' * 10)
+        print(f"Learning rate: {optimizer.param_groups[0]['lr']}")
+
 
         # Each epoch has a training and validation phase
         for phase in ['train3', 'val3', 'train2', 'val2', 'train1', 'val']:
@@ -194,6 +196,7 @@ def train_model(model, optimizer, scheduler, dataloaders, num_epochs=conf.num_ep
                 predict_model(model, dataloaders['test'], version=version, filepath = paths.output_data_automatic)
 
         scheduler.step()
+
         print()
 
     time_elapsed = time.time() - since
