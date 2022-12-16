@@ -86,12 +86,17 @@ def B_InitModel():
         input_size: the input size of the model
     """
     print('START: B_InitModel')
+    device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     classes = [name for name in os.listdir(paths.A_trainset) if os.path.isdir(os.path.join(paths.A_trainset, name))]
     num_classes = len(classes)
     print(f'Number of classes: {num_classes}')
     model = ut.initialize_model(conf.model_name, num_classes, conf.feature_extract)
+    # Observe that all parameters are being optimized
+    optimizer, scheduler = ut.init_optimizer(model, device)
+
+
     print('DONE: B_InitModel')
-    return model
+    return model, optimizer, scheduler
 
 
 def C_PrepareData():
@@ -138,13 +143,13 @@ def C_PrepareData():
             transforms.Normalize(conf.means, conf.stds)
         ]),
         'val': transforms.Compose([
-            transforms.Resize(input_size),
+            transforms.Resize((input_size, input_size)),
             transforms.ToTensor(),
             transforms.Normalize(conf.means, conf.stds)
         ]),
         # WARNING: KEEP SAME TO "val" transformer!!!!!!
         'test': transforms.Compose([
-            transforms.Resize(input_size),
+            transforms.Resize((input_size, input_size)),
             transforms.ToTensor(),
             transforms.Normalize(conf.means, conf.stds)
         ])
@@ -162,7 +167,8 @@ def C_PrepareData():
     train_loader3 = torch.utils.data.DataLoader(train_dataset3, batch_size=conf.batch_size, shuffle=True)
     val_loader = torch.utils.data.DataLoader(val_dataset, batch_size=conf.batch_size, shuffle=True)
     test_loader = torch.utils.data.DataLoader(test_dataset, batch_size=conf.batch_size, shuffle=False)
-    print(ut.get_mean_and_std(train_loader1))
+
+    # print(ut.get_mean_and_std(train_loader1))
 
     loaders = {
         'train1': train_loader1,
@@ -171,13 +177,17 @@ def C_PrepareData():
         'val': val_loader,
         'test': test_loader
     }
+
+    # for phase, loader in loaders.items():
+    #     assert all([sum(d[0].shape) == (224+224+3) for d in loader.dataset]), f'Not all pictures have the same size for {phase} loader'
+
     print('DONE: C_PrepareData')
     return loaders
 
 
-def D_TrainModel(model, loaders):
+def D_TrainModel(model, optimizer, scheduler, loaders):
     print('START: D_TrainModel')
-    model, val_acc_history = ut.train_model(model=model, dataloaders=loaders, num_epochs=conf.num_epochs)
+    model, val_acc_history = ut.train_model(model, optimizer, scheduler, dataloaders=loaders, num_epochs=conf.num_epochs)
     print('DONE: D_TrainModel')
     return model, val_acc_history
 

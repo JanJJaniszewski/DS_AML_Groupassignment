@@ -14,6 +14,7 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 import torchvision
+from torch.optim.lr_scheduler import ExponentialLR
 from torch.utils.data import DataLoader
 from torchvision import models
 from torchvision.models import ResNet18_Weights, ResNet50_Weights
@@ -56,8 +57,7 @@ def define_model(model):
     return model
 
 
-def init_optimizer(model_ft, device, feature_extract=True):
-    # Send the model to GPU
+def init_optimizer(model_ft, device='cpu'):
     model_ft = model_ft.to(device)
 
     # Gather the parameters to be optimized/updated in this run. If we are
@@ -66,8 +66,9 @@ def init_optimizer(model_ft, device, feature_extract=True):
     #  that we have just initialized, i.e. the parameters with requires_grad
     #  is True.
     params_to_update = model_ft.parameters()
+    print(f"Feature extract: {conf.feature_extract}")
     print("Params to learn:")
-    if feature_extract:
+    if conf.feature_extract:
         params_to_update = []
         for name, param in model_ft.named_parameters():
             if param.requires_grad == True:
@@ -79,8 +80,10 @@ def init_optimizer(model_ft, device, feature_extract=True):
                 print("\t", name)
 
     # Observe that all parameters are being optimized
-    optimizer_ft = optim.SGD(params_to_update, lr=0.001, momentum=0.9)
-    return optimizer_ft
+    optimizer = optim.SGD(params_to_update, lr=conf.learning_rate, momentum=conf.momentum)
+    scheduler = torch.optim.lr_scheduler.CyclicLR(optimizer, base_lr=0.001, max_lr=0.1,step_size_up=5,mode="triangular2")
+
+    return optimizer, scheduler
 
 
 def predict(model, test_loader):
@@ -112,40 +115,16 @@ def copy_file(source, destination):
     shutil.copyfile(source, destination)
 
 
-def train_model(model, dataloaders, num_epochs=conf.num_epochs):
-    version = int(time.time())
+def train_model(model, optimizer, scheduler, dataloaders, num_epochs=conf.num_epochs):
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+
+    version = int(time.time())
     since = time.time()
     val_acc_history = []
     best_model_wts = copy.deepcopy(model.state_dict())
     best_acc = 0.0
     # Print the model we just instantiated
     print(f"Model: {model}")
-
-    # Send the model to GPU
-    model = model.to(device)
-
-    # Gather the parameters to be optimized/updated in this run. If we are
-    #  finetuning we will be updating all parameters. However, if we are
-    #  doing feature extract method, we will only update the parameters
-    #  that we have just initialized, i.e. the parameters with requires_grad
-    #  is True.
-    params_to_update = model.parameters()
-    print("Params to learn:")
-    if conf.feature_extract:
-        params_to_update = []
-        for name, param in model.named_parameters():
-            if param.requires_grad == True:
-                params_to_update.append(param)
-                print("\t", name)
-    else:
-        for name, param in model.named_parameters():
-            if param.requires_grad == True:
-                print("\t", name)
-
-    # Observe that all parameters are being optimized
-    optimizer = optim.SGD(params_to_update, lr=conf.learning_rate, momentum=conf.momentum)
-
     # Setup the loss fxn
     criterion = nn.CrossEntropyLoss()
 
@@ -170,8 +149,7 @@ def train_model(model, dataloaders, num_epochs=conf.num_epochs):
             running_corrects = 0
 
             # Iterate over data.
-            for data in dataloaders[phase]:
-                inputs, labels = data
+            for inputs, labels in dataloaders[phase]:
                 inputs = inputs.to(device)
                 labels = labels.to(device)
 
@@ -215,6 +193,7 @@ def train_model(model, dataloaders, num_epochs=conf.num_epochs):
             with torch.set_grad_enabled(False):
                 predict_model(model, dataloaders['test'], version=version, filepath = paths.output_data_automatic)
 
+        scheduler.step()
         print()
 
     time_elapsed = time.time() - since
@@ -342,6 +321,6 @@ def predict_model(model, test_loader, verbose=0, version=int(time.time()), filep
     })
     if verbose > 1:
         print(df)
-    df.to_csv(filepath.format(version, index=False))
+    df.to_csv(filepath.format(version), index=False)
 
     return df
