@@ -13,13 +13,13 @@ def main(*pipeparts):
     if 'A' in pipeparts:
         pipe.A_Folderize(force=False)
     if 'B' in pipeparts:
-        model = pipe.B_InitModel()
+        model, optimizer, scheduler = pipe.B_InitModel()
     if 'C' in pipeparts:
-        train_loader, val_loader, test_loader = pipe.C_PrepareData()
+        loaders = pipe.C_PrepareData()
     if 'D' in pipeparts:
-        model, val_acc_history = pipe.D_TrainModel(model, train_loader, val_loader, test_loader)
+        model, val_acc_history = pipe.D_TrainModel(model, optimizer, scheduler, loaders)
     if 'E' in pipeparts:
-        predictions = pipe.E_PredictModel(model, test_loader)
+        predictions = pipe.E_PredictModel(model, loaders['test'])
         return predictions
 
 
