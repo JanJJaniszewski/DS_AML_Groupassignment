@@ -51,8 +51,11 @@ def A_Folderize(force=False):
 
         print('Putting pictures in the newly created folders')
         for picpath in os.listdir(paths.input_train):  # picpath is the pathway to one image and the image its img_name,
-            labelfolder = labels_train.loc[labels_train['img_name'] == picpath]['label'].iloc[
+            try: #look for the image
+                labelfolder = labels_train.loc[labels_train['img_name'] == picpath]['label'].iloc[
                 0]  # this returns a number indicating a foodclass
+            except IndexError: #if image is not found, ignore
+                p = 6
 
             # Validation set: Everything that is dividable by 4, else training set -> (25% validation set)
             try:
