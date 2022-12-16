@@ -76,8 +76,7 @@ def init_optimizer(model_ft, device='cpu'):
                 print("\t", name)
     else:
         for name, param in model_ft.named_parameters():
-            if param.requires_grad == True:
-                print("\t", name)
+            print("\t", name)
 
     # Observe that all parameters are being optimized
     optimizer = optim.SGD(params_to_update, lr=conf.learning_rate, momentum=conf.momentum)
