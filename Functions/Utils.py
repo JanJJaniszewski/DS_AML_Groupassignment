@@ -65,17 +65,12 @@ def init_optimizer(model_ft, device='cpu'):
     #  doing feature extract method, we will only update the parameters
     #  that we have just initialized, i.e. the parameters with requires_grad
     #  is True.
-    params_to_update = model_ft.parameters()
-    print(f"Feature extract: {conf.feature_extract}")
     print("Params to learn:")
-    if conf.feature_extract:
-        params_to_update = []
-        for name, param in model_ft.named_parameters():
-            if param.requires_grad == True:
-                params_to_update.append(param)
-                print("\t", name)
-    else:
-        for name, param in model_ft.named_parameters():
+    params_to_update = []
+    for name, param in model_ft.named_parameters():
+        if name in ['layer4.1.bn2.weight', 'layer4.1.bn2.bias', 'fc.weight', 'fc.bias']:
+            params_to_update.append(param)
+            param.requires_grad = True
             print("\t", name)
 
     # Observe that all parameters are being optimized
@@ -213,13 +208,9 @@ def find_class(idxz):
     retclass = idx_to_class[idxz]
     return retclass
 
-def set_parameter_requires_grad(model, feature_extracting):
-    if feature_extracting:
-        for param in model.parameters():
-            param.requires_grad = False
 
 
-def initialize_model(model_name, num_classes, feature_extract, use_pretrained=True):
+def initialize_model(model_name, num_classes, use_pretrained=True):
     # Initialize these variables which will be set in this if statement. Each of these
     #   variables is model specific.
     model_ft = None
@@ -228,8 +219,7 @@ def initialize_model(model_name, num_classes, feature_extract, use_pretrained=Tr
     if model_name == "resnet18":
         """ Resnet18
         """
-        model_ft = models.resnet18(weights=ResNet18_Weights.DEFAULT)
-        set_parameter_requires_grad(model_ft, feature_extract)
+        model_ft = models.resnet18(weights=ResNet18_Weights.IMAGENET1K_V1)
         num_ftrs = model_ft.fc.in_features
         model_ft.fc = nn.Linear(num_ftrs, num_classes)
 
@@ -237,7 +227,6 @@ def initialize_model(model_name, num_classes, feature_extract, use_pretrained=Tr
         """ Resnet50
         """
         model_ft = models.resnet50(weights=ResNet50_Weights.DEFAULT)
-        set_parameter_requires_grad(model_ft, feature_extract)
         num_ftrs = model_ft.fc.in_features
         model_ft.fc = nn.Linear(num_ftrs, num_classes)
 
@@ -245,7 +234,6 @@ def initialize_model(model_name, num_classes, feature_extract, use_pretrained=Tr
         """ Alexnet
         """
         model_ft = models.alexnet(pretrained=use_pretrained)
-        set_parameter_requires_grad(model_ft, feature_extract)
         num_ftrs = model_ft.classifier[6].in_features
         model_ft.classifier[6] = nn.Linear(num_ftrs, num_classes)
 
@@ -253,7 +241,6 @@ def initialize_model(model_name, num_classes, feature_extract, use_pretrained=Tr
         """ VGG11_bn
         """
         model_ft = models.vgg11_bn(pretrained=use_pretrained)
-        set_parameter_requires_grad(model_ft, feature_extract)
         num_ftrs = model_ft.classifier[6].in_features
         model_ft.classifier[6] = nn.Linear(num_ftrs, num_classes)
 
@@ -261,7 +248,6 @@ def initialize_model(model_name, num_classes, feature_extract, use_pretrained=Tr
         """ Squeezenet
         """
         model_ft = models.squeezenet1_0(pretrained=use_pretrained)
-        set_parameter_requires_grad(model_ft, feature_extract)
         model_ft.classifier[1] = nn.Conv2d(512, num_classes, kernel_size=(1, 1), stride=(1, 1))
         model_ft.num_classes = num_classes
 
@@ -269,7 +255,6 @@ def initialize_model(model_name, num_classes, feature_extract, use_pretrained=Tr
         """ Densenet
         """
         model_ft = models.densenet121(pretrained=use_pretrained)
-        set_parameter_requires_grad(model_ft, feature_extract)
         num_ftrs = model_ft.classifier.in_features
         model_ft.classifier = nn.Linear(num_ftrs, num_classes)
 
