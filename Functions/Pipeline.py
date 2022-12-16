@@ -55,7 +55,7 @@ def A_Folderize(force=False):
                 labelfolder = labels_train.loc[labels_train['img_name'] == picpath]['label'].iloc[
                 0]  # this returns a number indicating a foodclass
             except IndexError: #if image is not found, ignore since we deleted some filepaths    
-                p = 6
+                pass
 
             # Validation set: Everything that is dividable by 4, else training set -> (25% validation set)
             try:
