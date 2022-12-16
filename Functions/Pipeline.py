@@ -54,7 +54,7 @@ def A_Folderize(force=False):
             try: #look for the image
                 labelfolder = labels_train.loc[labels_train['img_name'] == picpath]['label'].iloc[
                 0]  # this returns a number indicating a foodclass
-            except IndexError: #if image is not found, ignore
+            except IndexError: #if image is not found, ignore since we deleted some filepaths    
                 p = 6
 
             # Validation set: Everything that is dividable by 4, else training set -> (25% validation set)
@@ -89,17 +89,12 @@ def B_InitModel():
         input_size: the input size of the model
     """
     print('START: B_InitModel')
-    device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     classes = [name for name in os.listdir(paths.A_trainset) if os.path.isdir(os.path.join(paths.A_trainset, name))]
     num_classes = len(classes)
     print(f'Number of classes: {num_classes}')
     model = ut.initialize_model(conf.model_name, num_classes, conf.feature_extract)
-    # Observe that all parameters are being optimized
-    optimizer, scheduler = ut.init_optimizer(model, device)
-
-
     print('DONE: B_InitModel')
-    return model, optimizer, scheduler
+    return model
 
 
 def C_PrepareData():
@@ -126,78 +121,55 @@ def C_PrepareData():
     # normalized data=> image=(image-mean)/std
     # Data augmentation and normalization for training
     # Just normalization for validation
-
     data_transforms = {
-        'train1': transforms.Compose([
-            transforms.Resize((input_size, input_size)),
-            transforms.ToTensor(),
-            transforms.Normalize(conf.means, conf.stds)
-        ]),
-        'train2': transforms.Compose([
-            transforms.AutoAugment(),
-            transforms.Resize((input_size, input_size)),
-            transforms.ToTensor(),
-            transforms.Normalize(conf.means, conf.stds)
-        ]),
-        'train3': transforms.Compose([
-            transforms.RandAugment(),
-            transforms.Resize((input_size, input_size)),
+        'train': transforms.Compose([
+            transforms.RandomResizedCrop(input_size),
+            # TODO: Check if better crop or transforms.Resize((input_size, input_size)),
+            transforms.RandomHorizontalFlip(),
+            transforms.RandomRotation(10),
             transforms.ToTensor(),
             transforms.Normalize(conf.means, conf.stds)
         ]),
         'val': transforms.Compose([
-            transforms.Resize((input_size, input_size)),
+            transforms.Resize(input_size),  # TODO: Check if resizing helps or not
+            transforms.CenterCrop(input_size),
             transforms.ToTensor(),
             transforms.Normalize(conf.means, conf.stds)
         ]),
         # WARNING: KEEP SAME TO "val" transformer!!!!!!
         'test': transforms.Compose([
-            transforms.Resize((input_size, input_size)),
+            transforms.Resize(input_size),  # TODO: Check if resizing helps or not
+            transforms.CenterCrop(input_size),
             transforms.ToTensor(),
             transforms.Normalize(conf.means, conf.stds)
         ])
     }
 
-    train_dataset1 = torchvision.datasets.ImageFolder(root=paths.A_trainset, transform=data_transforms['train1'])
-    train_dataset2 = torchvision.datasets.ImageFolder(root=paths.A_trainset, transform=data_transforms['train2'])
-    train_dataset3 = torchvision.datasets.ImageFolder(root=paths.A_trainset, transform=data_transforms['train3'])
+    train_dataset = torchvision.datasets.ImageFolder(root=paths.A_trainset, transform=data_transforms['train'])
     val_dataset = torchvision.datasets.ImageFolder(root=paths.A_validationset, transform=data_transforms['val'])
     test_dataset = torchvision.datasets.ImageFolder(root=paths.A_testset, transform=data_transforms['test'])
 
     # Mini-Batch Gradient Descent, start with 32 and explore to increase performance
-    train_loader1 = torch.utils.data.DataLoader(train_dataset1, batch_size=conf.batch_size, shuffle=True)
-    train_loader2 = torch.utils.data.DataLoader(train_dataset2, batch_size=conf.batch_size, shuffle=True)
-    train_loader3 = torch.utils.data.DataLoader(train_dataset3, batch_size=conf.batch_size, shuffle=True)
+    train_loader = torch.utils.data.DataLoader(train_dataset, batch_size=conf.batch_size, shuffle=True)
     val_loader = torch.utils.data.DataLoader(val_dataset, batch_size=conf.batch_size, shuffle=True)
     test_loader = torch.utils.data.DataLoader(test_dataset, batch_size=conf.batch_size, shuffle=False)
-
-    # print(ut.get_mean_and_std(train_loader1))
-
-    loaders = {
-        'train1': train_loader1,
-        'train2': train_loader2,
-        'train3': train_loader3,
-        'val': val_loader,
-        'test': test_loader
-    }
-
-    # for phase, loader in loaders.items():
-    #     assert all([sum(d[0].shape) == (224+224+3) for d in loader.dataset]), f'Not all pictures have the same size for {phase} loader'
+    # print(ut.get_mean_and_std(train_loader))
 
     print('DONE: C_PrepareData')
-    return loaders
+
+    return train_loader, val_loader, test_loader
 
 
-def D_TrainModel(model, optimizer, scheduler, loaders):
+def D_TrainModel(model, train_loader, val_loader, test_loader):
     print('START: D_TrainModel')
-    model, val_acc_history = ut.train_model(model, optimizer, scheduler, dataloaders=loaders, num_epochs=conf.num_epochs)
+    model, val_acc_history = ut.train_model(model=model, train_loader=train_loader, val_loader=val_loader, test_loader=test_loader, num_epochs=conf.num_epochs)
     print('DONE: D_TrainModel')
     return model, val_acc_history
 
 
 def E_PredictModel(model, test_loader, verbose=0, version=int(time.time())):
     print("STARTED: Predictions")
-    df = ut.predict_model(model, test_loader, verbose=verbose, version=version)
+    df= ut.predict_model(model, test_loader, verbose=verbose, version=version)
     print("DONE: Predictions")
 
     return df
