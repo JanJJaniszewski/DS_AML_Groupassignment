@@ -92,7 +92,7 @@ def B_InitModel():
     classes = [name for name in os.listdir(paths.A_trainset) if os.path.isdir(os.path.join(paths.A_trainset, name))]
     num_classes = len(classes)
     print(f'Number of classes: {num_classes}')
-    model = ut.initialize_model(conf.model_name, num_classes, conf.feature_extract)
+    model = ut.initialize_model(conf.model_name, num_classes)
     # Observe that all parameters are being optimized
     optimizer, scheduler = ut.init_optimizer(model, device)
 
