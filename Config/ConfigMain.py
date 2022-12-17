@@ -2,7 +2,7 @@ from Config.Location import location
 
 # Set model name and extract feature flag
 # Available model names: [resnet18, resnet50, alexnet, vgg, squeezenet, densenet, inception]
-model_name = "resnet50"
+model_name = "resnet18"
 
 # Flag for feature extracting. When False, we finetune the whole model,
 # when True we only update the reshaped layer params

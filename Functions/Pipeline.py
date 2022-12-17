@@ -51,11 +51,10 @@ def A_Folderize(force=False):
 
         print('Putting pictures in the newly created folders')
         for picpath in os.listdir(paths.input_train):  # picpath is the pathway to one image and the image its img_name,
-            try: #look for the image
-                labelfolder = labels_train.loc[labels_train['img_name'] == picpath]['label'].iloc[
-                0]  # this returns a number indicating a foodclass
-            except IndexError: #if image is not found, ignore
-                p = 6
+            try:
+                labelfolder = labels_train.loc[labels_train['img_name'] == picpath]['label'].iloc[0]  # this returns a number indicating a foodclass
+            except IndexError:
+                pass
 
             # Validation set: Everything that is dividable by 4, else training set -> (25% validation set)
             try:
@@ -93,7 +92,7 @@ def B_InitModel():
     classes = [name for name in os.listdir(paths.A_trainset) if os.path.isdir(os.path.join(paths.A_trainset, name))]
     num_classes = len(classes)
     print(f'Number of classes: {num_classes}')
-    model = ut.initialize_model(conf.model_name, num_classes, conf.feature_extract)
+    model = ut.initialize_model(conf.model_name, num_classes)
     # Observe that all parameters are being optimized
     optimizer, scheduler = ut.init_optimizer(model, device)
 
